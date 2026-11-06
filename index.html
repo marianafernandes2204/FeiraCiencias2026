@@ -243,14 +243,29 @@
     .info-column { min-width: 0; padding: clamp(12px, 1.8vw, 25px); border-radius: 18px; box-shadow: 0 14px 30px rgba(23, 59, 53, .14); }
     .before-column { color: #241313; background: #d32f2f; }
     .after-column { color: #102819; background: #388e3c; }
-    .column-title { margin: 0 0 20px; color: #171717; text-align: center; font-family: var(--display); font-size: clamp(22px, 3.4vw, 42px); font-weight: 900; line-height: 1; }
+    .column-title { margin: 0 0 16px; color: #171717; text-align: center; font-family: var(--display); font-size: clamp(18px, 2.2vw, 28px); font-weight: 900; line-height: 1; }
     .topic-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px); }
     .topic-card { min-width: 0; padding: clamp(8px, 1vw, 13px); border-radius: 12px; color: #25302e; }
+    .topic-card h4 { min-height: 2.4em; margin: 0 0 10px; text-align: center; font-size: clamp(11px, 1vw, 14px); line-height: 1.2; }
+    .topic-card p { margin: 10px 0 0; color: #3f514c; font-size: clamp(11px, .9vw, 13px); line-height: 1.5; text-align: center; }
     .before-column .topic-card { background: #ffcdd2; }
     .after-column .topic-card { background: #e0f2f1; }
-    .topic-card h4 { min-height: 36px; display: grid; place-items: center; margin: 0 0 9px; text-align: center; font-size: clamp(10px, .95vw, 13px); font-weight: 900; line-height: 1.25; }
-    .img-placeholder { height: clamp(70px, 9.5vw, 120px); margin-bottom: 10px; border: 1px dashed rgba(38, 50, 56, .3); border-radius: 7px; background: #e5e7e7; }
-    .topic-card p { margin: 0; color: #374744; font-size: clamp(10px, .85vw, 12px); line-height: 1.5; }
+    .card-image-wrap {
+      width: 100%;
+      height: clamp(70px, 9.5vw, 120px);
+      margin-bottom: 10px;
+      border-radius: 7px;
+      overflow: hidden;
+      background: #e5e7e7;
+    }
+
+    .card-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: zoom-in;
+    }
+    .card-image-wrap img:focus-visible { outline: 3px solid #e1805c; outline-offset: 3px; }
     .theme-column { display: flex; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: clamp(16px, 2vw, 30px); padding: 16px 8px; color: var(--ink); text-align: center; background: transparent; }
     .planet-viewport { position: relative; width: min(100%, clamp(110px, 13vw, 160px)); aspect-ratio: 1; flex: 0 0 auto; overflow: hidden; border-radius: 50%; }
     .planet-illustration { position: absolute; top: 50%; left: 50%; display: block; width: 230%; max-width: none; height: auto; transform: translate(-50%, -50%); object-fit: contain; }
@@ -415,6 +430,48 @@
     }
     .close-button { min-width: 230px; }
     body.quiz-active { overflow: hidden; }
+    .image-lightbox[hidden] { display: none; }
+    .image-lightbox {
+      position: fixed;
+      z-index: 30;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 80px 24px 24px;
+      background: rgba(5, 20, 18, .94);
+    }
+    .image-lightbox img {
+      display: block;
+      max-width: calc(100vw - 48px);
+      max-height: calc(100vh - 104px);
+      object-fit: contain;
+    }
+    .image-lightbox-close {
+      position: absolute;
+      top: max(16px, env(safe-area-inset-top));
+      right: max(16px, env(safe-area-inset-right));
+      min-height: 46px;
+      padding: 11px 18px;
+      border: 1px solid rgba(255,255,255,.55);
+      border-radius: 12px;
+      color: white;
+      background: var(--green);
+      cursor: pointer;
+      font-weight: 900;
+    }
+    .image-lightbox-close:hover { background: var(--green-dark); }
+    .image-lightbox-close:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    body.image-active { overflow: hidden; }
     @media (max-width: 620px) {
       .quiz-section { grid-template-columns: 96px minmax(0, 1fr); gap: 12px; min-height: 250px; margin: 0; padding: 16px 14px; }
       .quiz-section .robot-frame { width: min(100%, 96px); }
@@ -440,6 +497,9 @@
       .modal-result p { margin-bottom: 18px; font-size: 15px; }
       .modal-result .trophy-wrap { width: min(52vw, 190px); margin-bottom: 4px; }
       .close-button { min-width: 0; width: 100%; padding: 12px; font-size: 12px; }
+      .image-lightbox { padding: 72px 12px 12px; }
+      .image-lightbox img { max-width: calc(100vw - 24px); max-height: calc(100vh - 84px); }
+      .image-lightbox-close { top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); }
     }
   </style>
 </head>
@@ -513,6 +573,12 @@
       </div>
     </div>
 
+    <div class="image-lightbox" id="image-lightbox" role="dialog" aria-modal="true" aria-labelledby="image-lightbox-title" aria-hidden="true" hidden>
+      <h2 class="visually-hidden" id="image-lightbox-title">Imagem ampliada</h2>
+      <img id="image-lightbox-content" alt="">
+      <button class="image-lightbox-close" id="image-lightbox-close" type="button">Fechar imagem</button>
+    </div>
+
     <section class="page-shell folder-section" id="folder" aria-label="Comparação do meio ambiente com e sem inteligência artificial">
       <div class="comparison-grid">
         <article class="info-column before-column" aria-labelledby="before-title">
@@ -520,22 +586,30 @@
           <div class="topic-grid">
             <article class="topic-card">
               <h4>POLUIÇÃO</h4>
-              <div class="img-placeholder" aria-hidden="true"></div>
+              <div class="card-image-wrap">
+                <img src="poluicao.png" alt="Poluição sem IA">
+              </div>
               <p>Identificação manual, dados limitados e demora para agir contra o lixo e a poluição.</p>
             </article>
             <article class="topic-card">
               <h4>DESMATAMENTO</h4>
-              <div class="img-placeholder" aria-hidden="true"></div>
+              <div class="card-image-wrap">
+                <img src="desmatamento.png" alt="Desmatamento sem IA">
+              </div>
               <p>Visitas de campo dificultavam detectar áreas ilegais e tornavam as respostas mais lentas.</p>
             </article>
             <article class="topic-card">
               <h4>DESPERDÍCIO DE ÁGUA</h4>
-              <div class="img-placeholder" aria-hidden="true"></div>
+              <div class="card-image-wrap">
+                <img src="agua_sem.png" alt="Desperdício de água sem IA">
+              </div>
               <p>Sem monitoramento constante, vazamentos e desperdícios podiam demorar a ser percebidos.</p>
             </article>
             <article class="topic-card">
               <h4>ANIMAIS</h4>
-              <div class="img-placeholder" aria-hidden="true"></div>
+              <div class="card-image-wrap">
+                <img src="animais_sem.png" alt="Animais sem IA">
+              </div>
               <p>Era difícil localizar espécies ameaçadas e havia pouca informação para protegê-las.</p>
             </article>
           </div>
@@ -557,22 +631,30 @@
           <div class="topic-grid">
             <article class="topic-card">
               <h4>MONITORAMENTO RÁPIDO</h4>
-              <div class="img-placeholder" aria-hidden="true"></div>
+              <div class="card-image-wrap">
+                <img src="monitoramento.png" alt="Monitoramento rápido com IA">
+              </div>
               <p>Drones e imagens de satélite analisadas automaticamente ajudam a localizar lixo e mudanças.</p>
             </article>
             <article class="topic-card">
               <h4>CONTROLE DA POLUIÇÃO</h4>
-              <div class="img-placeholder" aria-hidden="true"></div>
+              <div class="card-image-wrap">
+                <img src="poluicao_com.png" alt="Controle da poluição com IA">
+              </div>
               <p>Sensores inteligentes acompanham a qualidade do ar e ajudam a prever riscos.</p>
             </article>
             <article class="topic-card">
               <h4>ECONOMIA DE ÁGUA</h4>
-              <div class="img-placeholder" aria-hidden="true"></div>
+              <div class="card-image-wrap">
+                <img src="agua_com.png" alt="Economia de água com IA">
+              </div>
               <p>Sistemas inteligentes podem identificar vazamentos e apoiar o uso consciente da água.</p>
             </article>
             <article class="topic-card">
               <h4>PROTEÇÃO DOS ANIMAIS</h4>
-              <div class="img-placeholder" aria-hidden="true"></div>
+              <div class="card-image-wrap">
+                <img src="animais_com.png" alt="Proteção dos animais com IA">
+              </div>
               <p>Câmeras e IA identificam espécies e ajudam a prever rotas de risco para a vida animal.</p>
             </article>
           </div>
@@ -630,6 +712,10 @@
     const trophyWrap = document.querySelector("#trophy-wrap");
     const trophyImage = document.querySelector("#trophy-image");
     const quizModal = document.querySelector("#quiz-modal");
+    const imageLightbox = document.querySelector("#image-lightbox");
+    const imageLightboxContent = document.querySelector("#image-lightbox-content");
+    const imageLightboxTitle = document.querySelector("#image-lightbox-title");
+    const imageLightboxClose = document.querySelector("#image-lightbox-close");
     const modalRobot = document.querySelector(".modal-robot");
     const startButton = document.querySelector("#start-button");
     const closeButton = document.querySelector("#close-button");
@@ -639,6 +725,7 @@
     let score = 0;
     let locked = false;
     let answerTimeout;
+    let activeGalleryImage = null;
     const typewriterStates = new WeakMap();
 
     function pararTypewriter(elemento) {
@@ -649,7 +736,7 @@
       typewriterStates.delete(elemento);
     }
 
-    function iniciarTypewriter(elemento, texto) {
+    function iniciarTypewriter(elemento, texto, repetir = true) {
       pararTypewriter(elemento);
 
       const characters = Array.from(texto);
@@ -665,6 +752,8 @@
           state.timeoutId = window.setTimeout(typeNextCharacter, 45);
           return;
         }
+
+        if (!repetir) return;
 
         state.timeoutId = window.setTimeout(() => {
           if (typewriterStates.get(elemento) !== state) return;
@@ -693,7 +782,7 @@
 
     function updateQuestion() {
       const question = roundQuestions[currentQuestion];
-      iniciarTypewriter(speech, question.text);
+      iniciarTypewriter(speech, question.text, false);
       roundCount.textContent = `Pergunta ${currentQuestion + 1} de 5`;
       progressTrack.setAttribute("aria-valuenow", String(currentQuestion));
       progressValue.style.width = `${(currentQuestion / 5) * 100}%`;
@@ -792,6 +881,57 @@
       iniciarTypewriter(initialSpeech, initialSpeechText);
       startButton.focus();
     }
+
+    function openImageLightbox(image) {
+      activeGalleryImage = image;
+      imageLightboxContent.src = image.currentSrc || image.src;
+      imageLightboxContent.alt = image.alt;
+      imageLightboxTitle.textContent = `Imagem ampliada: ${image.alt}`;
+      imageLightbox.hidden = false;
+      imageLightbox.setAttribute("aria-hidden", "false");
+      document.body.classList.add("image-active");
+      imageLightboxClose.focus();
+    }
+
+    function closeImageLightbox() {
+      imageLightbox.hidden = true;
+      imageLightbox.setAttribute("aria-hidden", "true");
+      imageLightboxContent.removeAttribute("src");
+      document.body.classList.remove("image-active");
+      if (activeGalleryImage) activeGalleryImage.focus();
+      activeGalleryImage = null;
+    }
+
+    const galleryImages = document.querySelectorAll(".card-image-wrap img");
+    galleryImages.forEach((image) => {
+      image.tabIndex = 0;
+      image.setAttribute("role", "button");
+      image.setAttribute("aria-haspopup", "dialog");
+      image.setAttribute("aria-label", `Ampliar imagem: ${image.alt}`);
+      image.addEventListener("click", () => openImageLightbox(image));
+      image.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openImageLightbox(image);
+        }
+      });
+    });
+
+    imageLightboxClose.addEventListener("click", closeImageLightbox);
+    imageLightbox.addEventListener("click", (event) => {
+      if (event.target === imageLightbox) closeImageLightbox();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (imageLightbox.hidden) return;
+      if (event.key === "Escape") {
+        closeImageLightbox();
+        return;
+      }
+      if (event.key === "Tab") {
+        event.preventDefault();
+        imageLightboxClose.focus();
+      }
+    });
 
     answerRow.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-answer]");
